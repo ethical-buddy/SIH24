@@ -1,0 +1,12 @@
+Problem Explanation
+Problem Statement:
+Organizations across various industries struggle to maintain a strong cybersecurity posture. One of the key ways to ensure this is by complying with industry standards like the Center for Internet Security (CIS) benchmarks. These benchmarks provide specific guidelines for securing IT infrastructures. However, manually auditing systems to ensure compliance with these guidelines is time-consuming, prone to errors, and resource-intensive. Therefore, there is a need for automated auditing scripts that can check compliance with CIS benchmarks for different operating systems like Windows 11 and Linux distributions.
+
+Objective:
+The goal is to develop a software solution that automates the process of auditing systems against CIS benchmarks for Windows 11 and various Linux distributions. The solution should:
+
+Be user-friendly and GUI-based.
+Generate reports of findings.
+Be customizable for different organizational needs.
+Accurately identify deviations from CIS benchmarks.
+Be easy to update as benchmarks evolve.
