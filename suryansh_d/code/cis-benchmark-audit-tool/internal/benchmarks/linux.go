@@ -3,6 +3,7 @@ package benchmarks
 import (
     "os/exec"
     "sync"
+    "fmt"
 )
 
 func CheckLinuxFirewall() (string, error) {
