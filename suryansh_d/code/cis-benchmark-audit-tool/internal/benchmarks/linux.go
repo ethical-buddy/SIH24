@@ -219,25 +219,38 @@ func EnsureNosuidOnVarTmp() (string, error) {
 }
 
 // EnsureSeparateVarLogPartition checks if /var/log is a separate partition
+// func EnsureSeparateVarLogPartition() (string, error) {
+// 	checkCmd := exec.Command("sh", "-c", `findmnt -n /var/log | cut -d " " -f 1`)
+// 	output, err := checkCmd.CombinedOutput()
+// 	if err := checkCmd.Run(); err != nil {
+// 		return "", fmt.Errorf("Failed to check /var/log partition: %v", err)
+// 	}
+// 	if string(output) == "/var/log" {
+// 		return "/var/log is already a separate partition.", nil
+// 	}
+// 	return "", fmt.Errorf("/var/log is not a separate partition")
+// }
+
+// // EnsureNodevOnVarLog ensures nodev option is set on /var/log partition
+// func EnsureNodevOnVarLog() (string, error) {
+// 	checkCmd := exec.Command("sh", "-c", `findmnt -n /var/log | grep -q "nodev"`)
+// 	if err := checkCmd.Run(); err != nil {
+// 		return "", fmt.Errorf("nodev option is not set on /var/log partition")
+// 	}
+// 	return "nodev option is set on /var/log partition.", nil
+// }
+
+// EnsureSeparateVarLogPartition checks if /var/log is a separate partition
 func EnsureSeparateVarLogPartition() (string, error) {
 	checkCmd := exec.Command("sh", "-c", `findmnt -n /var/log | cut -d " " -f 1`)
 	output, err := checkCmd.CombinedOutput()
-	if err := checkCmd.Run(); err != nil {
+	if err != nil {
 		return "", fmt.Errorf("Failed to check /var/log partition: %v", err)
 	}
 	if string(output) == "/var/log" {
 		return "/var/log is already a separate partition.", nil
 	}
 	return "", fmt.Errorf("/var/log is not a separate partition")
-}
-
-// EnsureNodevOnVarLog ensures nodev option is set on /var/log partition
-func EnsureNodevOnVarLog() (string, error) {
-	checkCmd := exec.Command("sh", "-c", `findmnt -n /var/log | grep -q "nodev"`)
-	if err := checkCmd.Run(); err != nil {
-		return "", fmt.Errorf("nodev option is not set on /var/log partition")
-	}
-	return "nodev option is set on /var/log partition.", nil
 }
 
 // EnsureNoexecOnVarLog ensures noexec option is set on /var/log partition
@@ -272,12 +285,20 @@ func EnsureSeparateVarLogAuditPartition() (string, error) {
 }
 
 // EnsureNodevOnVarLogAudit ensures nodev option is set on /var/log/audit partition
-func EnsureNodevOnVarLogAudit() (string, error) {
-	checkCmd := exec.Command("sh", "-c", `findmnt -n /var/log/audit | grep -q "nodev"`)
+// func EnsureNodevOnVarLogAudit() (string, error) {
+// 	checkCmd := exec.Command("sh", "-c", `findmnt -n /var/log/audit | grep -q "nodev"`)
+// 	if err := checkCmd.Run(); err != nil {
+// 		return "", fmt.Errorf("nodev option is not set on /var/log/audit partition")
+// 	}
+// 	return "nodev option is set on /var/log/audit partition.", nil
+// }
+
+func EnsureNodevOnVarLog() (string, error) {
+	checkCmd := exec.Command("sh", "-c", `findmnt -n /var/log | grep -q "nodev"`)
 	if err := checkCmd.Run(); err != nil {
-		return "", fmt.Errorf("nodev option is not set on /var/log/audit partition")
+		return "", fmt.Errorf("nodev option is not set on /var/log partition")
 	}
-	return "nodev option is set on /var/log/audit partition.", nil
+	return "nodev option is set on /var/log partition.", nil
 }
 
 // EnsureNoexecOnVarLogAudit ensures noexec option is set on /var/log/audit partition
@@ -404,11 +425,11 @@ func RunLinuxChecks() string {
 		EnsureNoexecOnVarTmp,
 		EnsureNosuidOnVarTmp,
 		EnsureSeparateVarLogPartition,
-		EnsureNodevOnVarLog,
+		//EnsureNodevOnVarLog,
 		EnsureNoexecOnVarLog,
 		EnsureNosuidOnVarLog,
 		EnsureSeparateVarLogAuditPartition,
-		EnsureNodevOnVarLogAudit,
+		//EnsureNodevOnVarLogAudit,
 		EnsureNoexecOnVarLogAudit,
 		EnsureNosuidOnVarLogAudit,
 		EnsureSeparateHomePartition,
@@ -438,3 +459,4 @@ func RunLinuxChecks() string {
 
 	return results
 }
+
