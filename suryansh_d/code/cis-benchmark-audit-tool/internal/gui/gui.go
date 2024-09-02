@@ -40,9 +40,37 @@ func CreateGUI() {
 
 	// Create a dropdown with checkboxes for selecting benchmarks
 	benchmarkCheckboxes := map[string]*widget.Check{
-		"RunLinuxCheck1": widget.NewCheck("Linux Check 1", nil),
-		"RunLinuxCheck2": widget.NewCheck("Linux Check 2", nil),
-		"RunLinuxCheck3": widget.NewCheck("Linux Check 3", nil),
+		"RunLinuxCheck1":  widget.NewCheck("CheckLinuxFirewall", nil),
+		"RunLinuxCheck2":  widget.NewCheck("DisableCramfs", nil),
+		"RunLinuxCheck3":  widget.NewCheck("DisableFreevxfs", nil),
+		"RunLinuxCheck4":  widget.NewCheck("Disablejffs2", nil),
+		"RunLinuxCheck5":  widget.NewCheck("DisableHfs", nil),
+		"RunLinuxCheck6":  widget.NewCheck("DisableSquashfs", nil),
+		"RunLinuxCheck7":  widget.NewCheck("DisableUdf", nil),
+		"RunLinuxCheck8":  widget.NewCheck("EnsureTmpIsSeparatePartition", nil),
+		"RunLinuxCheck9":  widget.NewCheck("EnsureNodevOnTmp ", nil),
+		"RunLinuxCheck10": widget.NewCheck("EnsureNoexecOnTmp", nil),
+		"RunLinuxCheck11": widget.NewCheck("EnsureNosuidOnTmp", nil),
+		"RunLinuxCheck12": widget.NewCheck("EnsureSeparateVarPartition", nil),
+		"RunLinuxCheck13": widget.NewCheck("EnsureNodevOnVar", nil),
+		"RunLinuxCheck14": widget.NewCheck("EnsureNosuidOnVar", nil),
+		"RunLinuxCheck15": widget.NewCheck("EnsureSeparateVarTmpPartition", nil),
+		"RunLinuxCheck16": widget.NewCheck("EnsureNodevOnVarTmp", nil),
+		"RunLinuxCheck17": widget.NewCheck("EnsureSeparateVarLogPartition", nil),
+		"RunLinuxCheck18": widget.NewCheck("EnsureNoexecOnVarLog", nil),
+		"RunLinuxCheck19": widget.NewCheck("EnsureNosuidOnVarLog", nil),
+		"RunLinuxCheck20": widget.NewCheck("EnsureSeparateVarLogAuditPartition", nil),
+		"RunLinuxCheck21": widget.NewCheck("EnsureNodevOnVarLog", nil),
+		"RunLinuxCheck22": widget.NewCheck("EnsureNoexecOnVarLogAudit", nil),
+		"RunLinuxCheck23": widget.NewCheck("EnsureNosuidOnVarLogAudit", nil),
+		"RunLinuxCheck24": widget.NewCheck("EnsureNodevOnHome", nil),
+		"RunLinuxCheck25": widget.NewCheck("EnsureNosuidOnHome", nil),
+		"RunLinuxCheck26": widget.NewCheck("EnsureNodevOnDevShm", nil),
+		"RunLinuxCheck27": widget.NewCheck("EnsureNoexecOnDevShm", nil),
+		"RunLinuxCheck28": widget.NewCheck("EnsureNosuidOnDevShm", nil),
+		"RunLinuxCheck29": widget.NewCheck("EnsureAutomountingDisabled", nil),
+		"RunLinuxCheck30": widget.NewCheck("EnsureUSBStorageDisabled", nil),
+
 		// Add more benchmarks by referencing actual function names from internal/benchmarks/linux.go
 	}
 
@@ -64,11 +92,15 @@ func CreateGUI() {
 		checkboxContainer.Add(check)
 	}
 
+	// Create a scrollable container for the checkboxes
+	scrollableCheckboxContainer := container.NewScroll(checkboxContainer)
+	scrollableCheckboxContainer.SetMinSize(fyne.NewSize(300, 350)) // Set a minimum size for visibility
+
 	// Create a button to trigger the dropdown
 	benchmarkButton := widget.NewButton("Select Benchmarks", func() {
-		// Display the checkboxes as a pop-up
-		benchmarkMenu := widget.NewPopUp(checkboxContainer, myWindow.Canvas())
-		benchmarkMenu.ShowAtPosition(fyne.NewPos(myWindow.Canvas().Size().Width-200, 50)) // Adjust position as needed
+		// Display the scrollable checkboxes as a pop-up
+		benchmarkMenu := widget.NewPopUp(scrollableCheckboxContainer, myWindow.Canvas())
+		benchmarkMenu.ShowAtPosition(fyne.NewPos(myWindow.Canvas().Size().Width-220, 50)) // Adjust position as needed
 	})
 
 	// Start Audit button
