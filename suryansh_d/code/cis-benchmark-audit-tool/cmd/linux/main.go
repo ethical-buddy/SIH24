@@ -1,4 +1,4 @@
-package main
+/*package main
 
 import (
 	"cis-benchmark-audit-tool/internal/benchmarks"
@@ -22,4 +22,16 @@ func main() {
     if err != nil {
         fmt.Println("Error generating report:", err)}
     }
+}*/
+
+package main
+
+import (
+	"cis-benchmark-audit-tool/internal/gui"
+)
+
+func main() {
+	// Initialize and start the GUI
+	gui.CreateGUI()
 }
+
