@@ -23,15 +23,5 @@ elif platform_name == "Windows":
 
     print("Go installed successfully on Windows.")
 
-elif platform_name == "Darwin":  # "Darwin" is the platform name for macOS
-    os.system("sudo rm -rf /usr/local/go")
-    os.system("curl -O https://golang.org/dl/go1.23.0.darwin-amd64.tar.gz")
-    os.system("sudo tar -C /usr/local -xzf go1.23.0.darwin-amd64.tar.gz")
-    os.system("echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.zshrc")
-    os.system("source ~/.zshrc")
-    os.system("go version")
-
-    print("Go installed successfully on macOS.")
-
 else:
     print("Unsupported platform.")
