@@ -1,7 +1,7 @@
 package benchmarks
 
 import (
-	"fmt"
+	//"fmt"
 	"os/exec"
 )
 
