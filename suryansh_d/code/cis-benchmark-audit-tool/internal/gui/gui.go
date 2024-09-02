@@ -48,6 +48,18 @@ func CreateGUI() {
 
 	// Create a VBox to hold the checkboxes
 	checkboxContainer := container.NewVBox()
+
+	// Create the "Select All" checkbox
+	selectAllCheckbox := widget.NewCheck("Select All", func(checked bool) {
+		for _, check := range benchmarkCheckboxes {
+			check.SetChecked(checked)
+		}
+	})
+
+	// Add the "Select All" checkbox to the container
+	checkboxContainer.Add(selectAllCheckbox)
+
+	// Add individual benchmark checkboxes to the container
 	for _, check := range benchmarkCheckboxes {
 		checkboxContainer.Add(check)
 	}
@@ -59,86 +71,52 @@ func CreateGUI() {
 		benchmarkMenu.ShowAtPosition(fyne.NewPos(myWindow.Canvas().Size().Width-200, 50)) // Adjust position as needed
 	})
 
-	// // Start Audit button
-	// startButton := widget.NewButton("Start Audit", func() {
-	// 	go func() {
-	// 		results := ""
-	// 		// Run selected benchmarks
-	// 		if benchmarkCheckboxes["RunLinuxCheck1"].Checked {
-	// 			results += benchmarks.DisableFreevxfs() // Replace with actual function
-	// 		}
-	// 		if benchmarkCheckboxes["RunLinuxCheck2"].Checked {
-	// 			results += benchmarks.DisableCramfs() // Replace with actual function
-	// 		}
-	// 		if benchmarkCheckboxes["RunLinuxCheck3"].Checked {
-	// 			results += benchmarks.CheckLinuxFirewall() // Replace with actual function
-	// 		}
-
-	// 		resultArea.SetText(results)
-
-	// 		// Generate report after checks are done
-	// 		r := report.Report{}
-	// 		for _, result := range results {
-	// 			r.AddResult(string(result)) // Ensure the result is treated as a string
-	// 		}
-
-	// 		err := r.GenerateReport("audit_report.txt")
-	// 		if err != nil {
-	// 			resultArea.SetText("Error generating report: " + err.Error())
-	// 		} else {
-	// 			resultArea.SetText(resultArea.Text + "\nAudit report generated successfully.")
-	// 		}
-	// 	}()
-	// })
-	// ... (other imports and setup)
-
 	// Start Audit button
-startButton := widget.NewButton("Start Audit", func() {
-    go func() {
-        results := ""
-        // Run selected benchmarks
-        if benchmarkCheckboxes["RunLinuxCheck1"].Checked {
-            result, err := benchmarks.DisableFreevxfs() // Replace with actual function
-            if err != nil {
-                results += "Error running DisableFreevxfs: " + err.Error() + "\n"
-            } else {
-                results += result + "\n"
-            }
-        }
-        if benchmarkCheckboxes["RunLinuxCheck2"].Checked {
-            result, err := benchmarks.DisableCramfs() // Replace with actual function
-            if err != nil {
-                results += "Error running DisableCramfs: " + err.Error() + "\n"
-            } else {
-                results += result + "\n"
-            }
-        }
-        if benchmarkCheckboxes["RunLinuxCheck3"].Checked {
-            result, err := benchmarks.CheckLinuxFirewall() // Replace with actual function
-            if err != nil {
-                results += "Error running CheckLinuxFirewall: " + err.Error() + "\n"
-            } else {
-                results += result + "\n"
-            }
-        }
+	startButton := widget.NewButton("Start Audit", func() {
+		go func() {
+			results := ""
+			// Run selected benchmarks
+			if benchmarkCheckboxes["RunLinuxCheck1"].Checked {
+				result, err := benchmarks.DisableFreevxfs() // Replace with actual function
+				if err != nil {
+					results += "Error running DisableFreevxfs: " + err.Error() + "\n"
+				} else {
+					results += result + "\n"
+				}
+			}
+			if benchmarkCheckboxes["RunLinuxCheck2"].Checked {
+				result, err := benchmarks.DisableCramfs() // Replace with actual function
+				if err != nil {
+					results += "Error running DisableCramfs: " + err.Error() + "\n"
+				} else {
+					results += result + "\n"
+				}
+			}
+			if benchmarkCheckboxes["RunLinuxCheck3"].Checked {
+				result, err := benchmarks.CheckLinuxFirewall() // Replace with actual function
+				if err != nil {
+					results += "Error running CheckLinuxFirewall: " + err.Error() + "\n"
+				} else {
+					results += result + "\n"
+				}
+			}
 
-        resultArea.SetText(results)
+			resultArea.SetText(results)
 
-        // Generate report after checks are done
-        r := report.Report{}
-        for _, result := range results {
-            r.AddResult(string(result)) // Ensure the result is treated as a string
-        }
+			// Generate report after checks are done
+			r := report.Report{}
+			for _, result := range results {
+				r.AddResult(string(result)) // Ensure the result is treated as a string
+			}
 
-        err := r.GenerateReport("audit_report.txt")
-        if err != nil {
-            resultArea.SetText("Error generating report: " + err.Error())
-        } else {
-            resultArea.SetText(resultArea.Text + "\nAudit report generated successfully.")
-        }
-    }()
-})
-	// ... (rest of the code)
+			err := r.GenerateReport("audit_report.txt")
+			if err != nil {
+				resultArea.SetText("Error generating report: " + err.Error())
+			} else {
+				resultArea.SetText(resultArea.Text + "\nAudit report generated successfully.")
+			}
+		}()
+	})
 
 	// Create the main container
 	content := container.NewVBox(
