@@ -3,6 +3,7 @@ package benchmarks
 import (
 	"fmt"
 	"os/exec"
+	"strings"
 	"sync"
 )
 
@@ -219,28 +220,6 @@ func EnsureNosuidOnVarTmp() (string, error) {
 }
 
 // EnsureSeparateVarLogPartition checks if /var/log is a separate partition
-// func EnsureSeparateVarLogPartition() (string, error) {
-// 	checkCmd := exec.Command("sh", "-c", `findmnt -n /var/log | cut -d " " -f 1`)
-// 	output, err := checkCmd.CombinedOutput()
-// 	if err := checkCmd.Run(); err != nil {
-// 		return "", fmt.Errorf("Failed to check /var/log partition: %v", err)
-// 	}
-// 	if string(output) == "/var/log" {
-// 		return "/var/log is already a separate partition.", nil
-// 	}
-// 	return "", fmt.Errorf("/var/log is not a separate partition")
-// }
-
-// // EnsureNodevOnVarLog ensures nodev option is set on /var/log partition
-// func EnsureNodevOnVarLog() (string, error) {
-// 	checkCmd := exec.Command("sh", "-c", `findmnt -n /var/log | grep -q "nodev"`)
-// 	if err := checkCmd.Run(); err != nil {
-// 		return "", fmt.Errorf("nodev option is not set on /var/log partition")
-// 	}
-// 	return "nodev option is set on /var/log partition.", nil
-// }
-
-// EnsureSeparateVarLogPartition checks if /var/log is a separate partition
 func EnsureSeparateVarLogPartition() (string, error) {
 	checkCmd := exec.Command("sh", "-c", `findmnt -n /var/log | cut -d " " -f 1`)
 	output, err := checkCmd.CombinedOutput()
@@ -282,23 +261,6 @@ func EnsureSeparateVarLogAuditPartition() (string, error) {
 		return "/var/log/audit is already a separate partition.", nil
 	}
 	return "", fmt.Errorf("/var/log/audit is not a separate partition")
-}
-
-// EnsureNodevOnVarLogAudit ensures nodev option is set on /var/log/audit partition
-// func EnsureNodevOnVarLogAudit() (string, error) {
-// 	checkCmd := exec.Command("sh", "-c", `findmnt -n /var/log/audit | grep -q "nodev"`)
-// 	if err := checkCmd.Run(); err != nil {
-// 		return "", fmt.Errorf("nodev option is not set on /var/log/audit partition")
-// 	}
-// 	return "nodev option is set on /var/log/audit partition.", nil
-// }
-
-func EnsureNodevOnVarLog() (string, error) {
-	checkCmd := exec.Command("sh", "-c", `findmnt -n /var/log | grep -q "nodev"`)
-	if err := checkCmd.Run(); err != nil {
-		return "", fmt.Errorf("nodev option is not set on /var/log partition")
-	}
-	return "nodev option is set on /var/log partition.", nil
 }
 
 // EnsureNoexecOnVarLogAudit ensures noexec option is set on /var/log/audit partition
@@ -384,7 +346,7 @@ func EnsureAutomountingDisabled() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Failed to check automounting status: %v", err)
 	}
-	if string(output) == "disabled" {
+	if strings.TrimSpace(string(output)) == "disabled" {
 		return "Automounting is already disabled.", nil
 	}
 	return "", fmt.Errorf("Automounting is not disabled")
@@ -397,6 +359,387 @@ func EnsureUSBStorageDisabled() (string, error) {
 		return "", fmt.Errorf("Failed to disable USB storage: %v", err)
 	}
 	return "USB storage disabled successfully.", nil
+}
+
+// EnsureGPGKeysConfigured checks if GPG keys are configured
+func EnsureGPGKeysConfigured() (string, error) {
+	cmd := exec.Command("apt-key", "list")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("Failed to list GPG keys: %v", err)
+	}
+	if len(output) == 0 {
+		return "", fmt.Errorf("No GPG keys configured")
+	}
+	return "GPG keys are configured.", nil
+}
+
+// EnsureAppArmorInstalled checks if AppArmor is installed
+func EnsureAppArmorInstalled() (string, error) {
+	cmd := exec.Command("dpkg-query", "-W", "--showformat='${Status}'", "apparmor")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("Failed to check AppArmor installation: %v", err)
+	}
+	if !strings.Contains(string(output), "install ok installed") {
+		return "", fmt.Errorf("AppArmor is not installed")
+	}
+	return "AppArmor is installed.", nil
+}
+
+// EnsureAppArmorEnabledInBootloader checks if AppArmor is enabled in the bootloader configuration
+func EnsureAppArmorEnabledInBootloader() (string, error) {
+	cmd := exec.Command("grep", "'^\\s*linux'", "/boot/grub/grub.cfg")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("Failed to check AppArmor in bootloader: %v", err)
+	}
+	if !strings.Contains(string(output), "security=apparmor") {
+		return "", fmt.Errorf("AppArmor is not enabled in bootloader")
+	}
+	return "AppArmor is enabled in the bootloader configuration.", nil
+}
+
+// EnsureAIDEInstalled checks if AIDE is installed
+func EnsureAIDEInstalled() (string, error) {
+	cmd := exec.Command("dpkg-query", "-W", "--showformat='${Status}'", "aide")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("Failed to check AIDE installation: %v", err)
+	}
+	if !strings.Contains(string(output), "install ok installed") {
+		return "", fmt.Errorf("AIDE is not installed")
+	}
+	return "AIDE is installed.", nil
+}
+
+// EnsureUFWInstalled checks if ufw is installed
+func EnsureUFWInstalled() (string, error) {
+	cmd := exec.Command("dpkg-query", "-W", "--showformat='${Status}'", "ufw")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("Failed to check ufw installation: %v", err)
+	}
+	if !strings.Contains(string(output), "install ok installed") {
+		return "", fmt.Errorf("ufw is not installed")
+	}
+	return "ufw is installed.", nil
+}
+
+// EnsureChronyOrNTPInstalled ensures either chrony or ntp is installed
+func EnsureChronyOrNTPInstalled() (string, error) {
+	cmd := exec.Command("sh", "-c", "dpkg-query -W chrony ntp")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("Failed to check chrony or ntp installation: %v", err)
+	}
+	if !strings.Contains(string(output), "chrony") && !strings.Contains(string(output), "ntp") {
+		return "", fmt.Errorf("Neither chrony nor ntp is installed")
+	}
+	return "Chrony or NTP is installed.", nil
+}
+
+// EnsureX11ForwardingDisabled ensures X11 forwarding is disabled
+func EnsureX11ForwardingDisabled() (string, error) {
+	cmd := exec.Command("grep", "^X11Forwarding", "/etc/ssh/sshd_config")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("Failed to check X11Forwarding setting: %v", err)
+	}
+	if strings.TrimSpace(string(output)) != "X11Forwarding no" {
+		return "", fmt.Errorf("X11 forwarding is not disabled")
+	}
+	return "X11 forwarding is disabled.", nil
+}
+
+// EnsureTimeSynchronizationIsInUse ensures a time synchronization service is in use
+func EnsureTimeSynchronizationIsInUse() (string, error) {
+	cmd := exec.Command("timedatectl", "show", "-p", "NTPSynchronized")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("Failed to check time synchronization: %v", err)
+	}
+	if !strings.Contains(string(output), "yes") {
+		return "", fmt.Errorf("Time synchronization is not in use")
+	}
+	return "Time synchronization is in use.", nil
+}
+
+// EnsureNoUnnecessaryServices ensures there are no unnecessary services running
+func EnsureNoUnnecessaryServices() (string, error) {
+	services := []string{"avahi-daemon", "cups", "smbd", "rpcbind"}
+	for _, service := range services {
+		cmd := exec.Command("systemctl", "is-enabled", service)
+		output, err := cmd.CombinedOutput()
+		if err == nil && strings.TrimSpace(string(output)) != "disabled" {
+			return "", fmt.Errorf("%s service is running", service)
+		}
+	}
+	return "No unnecessary services are running.", nil
+}
+
+// EnsureSSHRootLoginDisabled ensures root login over SSH is disabled
+func EnsureSSHRootLoginDisabled() (string, error) {
+	cmd := exec.Command("grep", "^PermitRootLogin", "/etc/ssh/sshd_config")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("Failed to check PermitRootLogin setting: %v", err)
+	}
+	if strings.TrimSpace(string(output)) != "PermitRootLogin no" {
+		return "", fmt.Errorf("Root login over SSH is not disabled")
+	}
+	return "Root login over SSH is disabled.", nil
+}
+
+// EnsureSSHPermitEmptyPasswordsDisabled ensures SSH does not allow empty passwords
+func EnsureSSHPermitEmptyPasswordsDisabled() (string, error) {
+	cmd := exec.Command("grep", "^PermitEmptyPasswords", "/etc/ssh/sshd_config")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("Failed to check PermitEmptyPasswords setting: %v", err)
+	}
+	if strings.TrimSpace(string(output)) != "PermitEmptyPasswords no" {
+		return "", fmt.Errorf("SSH allows empty passwords")
+	}
+	return "SSH does not allow empty passwords.", nil
+}
+
+// EnsurePasswordExpirationConfigured ensures password expiration is configured
+func EnsurePasswordExpirationConfigured() (string, error) {
+	cmd := exec.Command("chage", "-l", "root")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("Failed to check password expiration: %v", err)
+	}
+	if !strings.Contains(string(output), "Password expires") {
+		return "", fmt.Errorf("Password expiration is not configured")
+	}
+	return "Password expiration is configured.", nil
+}
+
+// EnsureSSHBannerConfigured ensures the SSH banner is configured
+func EnsureSSHBannerConfigured() (string, error) {
+	cmd := exec.Command("grep", "^Banner", "/etc/ssh/sshd_config")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("Failed to check SSH banner setting: %v", err)
+	}
+	if !strings.Contains(string(output), "/etc/issue.net") {
+		return "", fmt.Errorf("SSH banner is not configured")
+	}
+	return "SSH banner is configured.", nil
+}
+
+// EnsureNISClientNotInstalled ensures the NIS client is not installed
+func EnsureNISClientNotInstalled() (string, error) {
+	cmd := exec.Command("dpkg-query", "-W", "--showformat='${Status}'", "nis")
+	output, err := cmd.CombinedOutput()
+	if err == nil && strings.Contains(string(output), "install ok installed") {
+		return "", fmt.Errorf("NIS client is installed")
+	}
+	return "NIS client is not installed.", nil
+}
+
+// EnsureTelnetClientNotInstalled ensures the Telnet client is not installed
+func EnsureTelnetClientNotInstalled() (string, error) {
+	cmd := exec.Command("dpkg-query", "-W", "--showformat='${Status}'", "telnet")
+	output, err := cmd.CombinedOutput()
+	if err == nil && strings.Contains(string(output), "install ok installed") {
+		return "", fmt.Errorf("Telnet client is installed")
+	}
+	return "Telnet client is not installed.", nil
+}
+
+// EnsureFTPClientNotInstalled ensures the FTP client is not installed
+func EnsureFTPClientNotInstalled() (string, error) {
+	cmd := exec.Command("dpkg-query", "-W", "--showformat='${Status}'", "ftp")
+	output, err := cmd.CombinedOutput()
+	if err == nil && strings.Contains(string(output), "install ok installed") {
+		return "", fmt.Errorf("FTP client is installed")
+	}
+	return "FTP client is not installed.", nil
+}
+
+// EnsureIPv6IsDisabled ensures IPv6 is disabled if not in use
+func EnsureIPv6IsDisabled() (string, error) {
+	cmd := exec.Command("sysctl", "net.ipv6.conf.all.disable_ipv6")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("Failed to check IPv6 status: %v", err)
+	}
+	if !strings.Contains(string(output), "= 1") {
+		return "", fmt.Errorf("IPv6 is not disabled")
+	}
+	return "IPv6 is disabled.", nil
+}
+
+// EnsureRootOnlyHasUID0 ensures only root has UID 0
+func EnsureRootOnlyHasUID0() (string, error) {
+	cmd := exec.Command("awk", "-F:", "'$3 == 0 {print $1}'", "/etc/passwd")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("Failed to check UID 0 accounts: %v", err)
+	}
+	if strings.TrimSpace(string(output)) != "root" {
+		return "", fmt.Errorf("More than one account has UID 0")
+	}
+	return "Only root has UID 0.", nil
+}
+
+// EnsureSyslogIsInstalled ensures syslog is installed
+func EnsureSyslogIsInstalled() (string, error) {
+	cmd := exec.Command("dpkg-query", "-W", "--showformat='${Status}'", "rsyslog")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("Failed to check syslog installation: %v", err)
+	}
+	if !strings.Contains(string(output), "install ok installed") {
+		return "", fmt.Errorf("Syslog is not installed")
+	}
+	return "Syslog is installed.", nil
+}
+
+// EnsureIPForwardingDisabled ensures IP forwarding is disabled
+func EnsureIPForwardingDisabled() (string, error) {
+	cmd := exec.Command("sysctl", "net.ipv4.ip_forward")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("Failed to check IP forwarding: %v", err)
+	}
+	if !strings.Contains(string(output), "= 0") {
+		return "", fmt.Errorf("IP forwarding is not disabled")
+	}
+	return "IP forwarding is disabled.", nil
+}
+
+// EnsurePacketRedirectSendingDisabled ensures packet redirect sending is disabled
+func EnsurePacketRedirectSendingDisabled() (string, error) {
+	cmd := exec.Command("sysctl", "net.ipv4.conf.all.send_redirects")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("Failed to check packet redirect sending: %v", err)
+	}
+	if !strings.Contains(string(output), "= 0") {
+		return "", fmt.Errorf("Packet redirect sending is not disabled")
+	}
+	return "Packet redirect sending is disabled.", nil
+}
+
+// EnsureBogusICMPResponsesIgnored ensures bogus ICMP responses are ignored
+func EnsureBogusICMPResponsesIgnored() (string, error) {
+	cmd := exec.Command("sysctl", "net.ipv4.icmp_ignore_bogus_error_responses")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("Failed to check bogus ICMP responses setting: %v", err)
+	}
+	if !strings.Contains(string(output), "= 1") {
+		return "", fmt.Errorf("Bogus ICMP responses are not ignored")
+	}
+	return "Bogus ICMP responses are ignored.", nil
+}
+
+// EnsureBroadcastICMPRequestsIgnored ensures broadcast ICMP requests are ignored
+func EnsureBroadcastICMPRequestsIgnored() (string, error) {
+	cmd := exec.Command("sysctl", "net.ipv4.icmp_echo_ignore_broadcasts")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("Failed to check broadcast ICMP requests setting: %v", err)
+	}
+	if !strings.Contains(string(output), "= 1") {
+		return "", fmt.Errorf("Broadcast ICMP requests are not ignored")
+	}
+	return "Broadcast ICMP requests are ignored.", nil
+}
+
+// EnsureICMPRedirectAcceptanceDisabled ensures ICMP redirects are not accepted
+func EnsureICMPRedirectAcceptanceDisabled() (string, error) {
+	cmd := exec.Command("sysctl", "net.ipv4.conf.all.accept_redirects")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("Failed to check ICMP redirect acceptance: %v", err)
+	}
+	if !strings.Contains(string(output), "= 0") {
+		return "", fmt.Errorf("ICMP redirects are accepted")
+	}
+	return "ICMP redirects are not accepted.", nil
+}
+
+// EnsureSecureICMPRedirectAcceptanceDisabled ensures secure ICMP redirects are not accepted
+func EnsureSecureICMPRedirectAcceptanceDisabled() (string, error) {
+	cmd := exec.Command("sysctl", "net.ipv4.conf.all.secure_redirects")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("Failed to check secure ICMP redirect acceptance: %v", err)
+	}
+	if !strings.Contains(string(output), "= 0") {
+		return "", fmt.Errorf("Secure ICMP redirects are accepted")
+	}
+	return "Secure ICMP redirects are not accepted.", nil
+}
+
+// EnsureReversePathFilteringEnabled ensures reverse path filtering is enabled
+func EnsureReversePathFilteringEnabled() (string, error) {
+	cmd := exec.Command("sysctl", "net.ipv4.conf.all.rp_filter")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("Failed to check reverse path filtering: %v", err)
+	}
+	if !strings.Contains(string(output), "= 1") {
+		return "", fmt.Errorf("Reverse path filtering is not enabled")
+	}
+	return "Reverse path filtering is enabled.", nil
+}
+
+// EnsureSourceRoutedPacketsNotAccepted ensures source-routed packets are not accepted
+func EnsureSourceRoutedPacketsNotAccepted() (string, error) {
+	cmd := exec.Command("sysctl", "net.ipv4.conf.all.accept_source_route")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("Failed to check source-routed packets acceptance: %v", err)
+	}
+	if !strings.Contains(string(output), "= 0") {
+		return "", fmt.Errorf("Source-routed packets are accepted")
+	}
+	return "Source-routed packets are not accepted.", nil
+}
+
+// EnsureSuspiciousPacketsLogged ensures suspicious packets are logged
+func EnsureSuspiciousPacketsLogged() (string, error) {
+	cmd := exec.Command("sysctl", "net.ipv4.conf.all.log_martians")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("Failed to check suspicious packets logging: %v", err)
+	}
+	if !strings.Contains(string(output), "= 1") {
+		return "", fmt.Errorf("Suspicious packets are not logged")
+	}
+	return "Suspicious packets are logged.", nil
+}
+
+// EnsureTCPSYNCookiesEnabled ensures TCP SYN Cookies are enabled
+func EnsureTCPSYNCookiesEnabled() (string, error) {
+	cmd := exec.Command("sysctl", "net.ipv4.tcp_syncookies")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("Failed to check TCP SYN Cookies setting: %v", err)
+	}
+	if !strings.Contains(string(output), "= 1") {
+		return "", fmt.Errorf("TCP SYN Cookies are not enabled")
+	}
+	return "TCP SYN Cookies are enabled.", nil
+}
+
+// EnsureIPv6RouterAdvertisementsNotAccepted ensures IPv6 router advertisements are not accepted
+func EnsureIPv6RouterAdvertisementsNotAccepted() (string, error) {
+	cmd := exec.Command("sysctl", "net.ipv6.conf.all.accept_ra")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("Failed to check IPv6 router advertisements acceptance: %v", err)
+	}
+	if !strings.Contains(string(output), "= 0") {
+		return "", fmt.Errorf("IPv6 router advertisements are accepted")
+	}
+	return "IPv6 router advertisements are not accepted.", nil
 }
 
 // RunLinuxChecks runs all the defined checks
@@ -425,11 +768,9 @@ func RunLinuxChecks() string {
 		EnsureNoexecOnVarTmp,
 		EnsureNosuidOnVarTmp,
 		EnsureSeparateVarLogPartition,
-		//EnsureNodevOnVarLog,
 		EnsureNoexecOnVarLog,
 		EnsureNosuidOnVarLog,
 		EnsureSeparateVarLogAuditPartition,
-		//EnsureNodevOnVarLogAudit,
 		EnsureNoexecOnVarLogAudit,
 		EnsureNosuidOnVarLogAudit,
 		EnsureSeparateHomePartition,
@@ -440,6 +781,36 @@ func RunLinuxChecks() string {
 		EnsureNosuidOnDevShm,
 		EnsureAutomountingDisabled,
 		EnsureUSBStorageDisabled,
+		EnsureGPGKeysConfigured,
+		EnsureAppArmorInstalled,
+		EnsureAppArmorEnabledInBootloader,
+		EnsureAIDEInstalled,
+		EnsureUFWInstalled,
+		EnsureChronyOrNTPInstalled,
+		EnsureX11ForwardingDisabled,
+		EnsureTimeSynchronizationIsInUse,
+		EnsureNoUnnecessaryServices,
+		EnsureSSHRootLoginDisabled,
+		EnsureSSHPermitEmptyPasswordsDisabled,
+		EnsurePasswordExpirationConfigured,
+		EnsureSSHBannerConfigured,
+		EnsureNISClientNotInstalled,
+		EnsureTelnetClientNotInstalled,
+		EnsureFTPClientNotInstalled,
+		EnsureIPv6IsDisabled,
+		EnsureRootOnlyHasUID0,
+		EnsureSyslogIsInstalled,
+		EnsureIPForwardingDisabled,
+		EnsurePacketRedirectSendingDisabled,
+		EnsureBogusICMPResponsesIgnored,
+		EnsureBroadcastICMPRequestsIgnored,
+		EnsureICMPRedirectAcceptanceDisabled,
+		EnsureSecureICMPRedirectAcceptanceDisabled,
+		EnsureReversePathFilteringEnabled,
+		EnsureSourceRoutedPacketsNotAccepted,
+		EnsureSuspiciousPacketsLogged,
+		EnsureTCPSYNCookiesEnabled,
+		EnsureIPv6RouterAdvertisementsNotAccepted,
 		// Add more Linux check functions here
 	}
 
@@ -459,4 +830,3 @@ func RunLinuxChecks() string {
 
 	return results
 }
-
