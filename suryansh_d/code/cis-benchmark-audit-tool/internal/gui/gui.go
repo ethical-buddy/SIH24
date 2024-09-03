@@ -6,6 +6,7 @@ import (
     "html/template"
     "io/ioutil"
     "log"
+//    "os"
     "os/exec"
     "runtime"
 
@@ -41,7 +42,6 @@ func CreateGUI() {
 
     // Create a dropdown with checkboxes for selecting benchmarks
     benchmarkCheckboxes := map[string]*widget.Check{
-        // List of benchmarks
         "RunLinuxCheck1":  widget.NewCheck("CheckLinuxFirewall", nil),
         "RunLinuxCheck2":  widget.NewCheck("DisableCramfs", nil),
         "RunLinuxCheck3":  widget.NewCheck("DisableFreevxfs", nil),
@@ -62,7 +62,6 @@ func CreateGUI() {
         "RunLinuxCheck18": widget.NewCheck("EnsureNoexecOnVarLog", nil),
         "RunLinuxCheck19": widget.NewCheck("EnsureNosuidOnVarLog", nil),
         "RunLinuxCheck20": widget.NewCheck("EnsureSeparateVarLogAuditPartition", nil),
-        "RunLinuxCheck21": widget.NewCheck("EnsureNodevOnVarLog", nil),
         "RunLinuxCheck22": widget.NewCheck("EnsureNoexecOnVarLogAudit", nil),
         "RunLinuxCheck23": widget.NewCheck("EnsureNosuidOnVarLogAudit", nil),
         "RunLinuxCheck24": widget.NewCheck("EnsureNodevOnHome", nil),
@@ -125,7 +124,6 @@ func CreateGUI() {
         "RunLinuxCheck18": benchmarks.EnsureNoexecOnVarLog,
         "RunLinuxCheck19": benchmarks.EnsureNosuidOnVarLog,
         "RunLinuxCheck20": benchmarks.EnsureSeparateVarLogAuditPartition,
-//        "RunLinuxCheck21": benchmarks.EnsureNodevOnVarLog,
         "RunLinuxCheck22": benchmarks.EnsureNoexecOnVarLogAudit,
         "RunLinuxCheck23": benchmarks.EnsureNosuidOnVarLogAudit,
         "RunLinuxCheck24": benchmarks.EnsureNodevOnHome,
@@ -137,41 +135,52 @@ func CreateGUI() {
         "RunLinuxCheck30": benchmarks.EnsureUSBStorageDisabled,
     }
 
-    // Start Audit button
+    // Create a mapping from function identifiers to descriptive names
+    functionNameMapping := map[string]string{
+        "RunLinuxCheck1":  "Check Linux Firewall",
+        "RunLinuxCheck2":  "Disable Cramfs",
+        "RunLinuxCheck3":  "Disable Freevxfs",
+        "RunLinuxCheck4":  "Disable Jffs2",
+        "RunLinuxCheck5":  "Disable Hfs",
+        "RunLinuxCheck6":  "Disable Squashfs",
+        "RunLinuxCheck7":  "Disable Udf",
+        "RunLinuxCheck8":  "Ensure /tmp is a Separate Partition",
+        "RunLinuxCheck9":  "Ensure nodev option on /tmp",
+        "RunLinuxCheck10": "Ensure noexec option on /tmp",
+        "RunLinuxCheck11": "Ensure nosuid option on /tmp",
+        "RunLinuxCheck12": "Ensure /var is a Separate Partition",
+        "RunLinuxCheck13": "Ensure nodev option on /var",
+        "RunLinuxCheck14": "Ensure nosuid option on /var",
+        "RunLinuxCheck15": "Ensure /var/tmp is a Separate Partition",
+        "RunLinuxCheck16": "Ensure nodev option on /var/tmp",
+        "RunLinuxCheck17": "Ensure /var/log is a Separate Partition",
+        "RunLinuxCheck18": "Ensure noexec option on /var/log",
+        "RunLinuxCheck19": "Ensure nosuid option on /var/log",
+        "RunLinuxCheck20": "Ensure /var/log/audit is a Separate Partition",
+        "RunLinuxCheck22": "Ensure noexec option on /var/log/audit",
+        "RunLinuxCheck23": "Ensure nosuid option on /var/log/audit",
+        "RunLinuxCheck24": "Ensure nodev option on /home",
+        "RunLinuxCheck25": "Ensure nosuid option on /home",
+        "RunLinuxCheck26": "Ensure nodev option on /dev/shm",
+        "RunLinuxCheck27": "Ensure noexec option on /dev/shm",
+        "RunLinuxCheck28": "Ensure nosuid option on /dev/shm",
+        "RunLinuxCheck29": "Ensure automounting is Disabled",
+        "RunLinuxCheck30": "Ensure USB Storage is Disabled",
+    }
+
+    // Create a button to start the audit
     startButton := widget.NewButton("Start Audit", func() {
         go func() {
-            // Create a slice to hold benchmark results
-            var benchmarksResults []struct {
-                Name    string
-                Result  string
-                IsError bool
-            }
-
-            // Check and run each benchmark function
-            for name, check := range benchmarkCheckboxes {
-                if check != nil && check.Checked {
-                    benchmarkFunc, exists := benchmarkFunctions[name]
-                    if exists {
+            var results string
+            for id, check := range benchmarkCheckboxes {
+                if check.Checked {
+                    if benchmarkFunc, exists := benchmarkFunctions[id]; exists {
                         result, err := benchmarkFunc()
                         if err != nil {
-                            benchmarksResults = append(benchmarksResults, struct {
-                                Name    string
-                                Result  string
-                                IsError bool
-                            }{Name: name, Result: "Error running " + name + ": " + err.Error(), IsError: true})
+                            results += functionNameMapping[id] + " failed: " + err.Error() + "\n"
                         } else {
-                            benchmarksResults = append(benchmarksResults, struct {
-                                Name    string
-                                Result  string
-                                IsError bool
-                            }{Name: name, Result: result, IsError: false})
+                            results += functionNameMapping[id] + " passed: " + result + "\n"
                         }
-                    } else {
-                        benchmarksResults = append(benchmarksResults, struct {
-                            Name    string
-                            Result  string
-                            IsError bool
-                        }{Name: name, Result: "No function for " + name, IsError: true})
                     }
                 }
             }
@@ -180,64 +189,99 @@ func CreateGUI() {
             htmlFileName := "audit_report.html"
             tmpl := template.Must(template.New("report").Parse(`
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CIS Benchmark Audit Report</title>
     <style>
-        body { font-family: Arial, sans-serif; }
-        h1 { text-align: center; }
-        .benchmark { margin: 20px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
-        .error { color: red; }
-        .pass { color: green; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+        .report-header {
+            text-align: center;
+        }
+        .report-content {
+            font-size: 16px;
+            white-space: pre-wrap; /* Preserve line breaks and spaces */
+        }
+        .text-center {
+            text-align: center;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
-    <h1>CIS Benchmark Audit Report</h1>
-    {{range .}}
-    <div class="benchmark {{if .IsError}}error{{else}}pass{{end}}">
-        <h2>{{.Name}}</h2>
-        <p>{{.Result}}</p>
+    <div class="container">
+        <div class="report-header">
+            <h1>CIS Benchmark Audit Report</h1>
+        </div>
+        <div class="report-content">
+            {{ .Results }}
+        </div>
+        <div class="text-center">
+            <a href="audit_report.pdf" class="btn btn-primary" download>Download PDF</a>
+        </div>
     </div>
-    {{end}}
 </body>
 </html>
-            `))
-            var htmlContent bytes.Buffer
-            if err := tmpl.Execute(&htmlContent, benchmarksResults); err != nil {
+`))
+            var buf bytes.Buffer
+            data := struct {
+                Results string
+            }{
+                Results: results,
+            }
+            err = tmpl.Execute(&buf, data)
+            if err != nil {
                 log.Println("Failed to generate HTML report:", err)
                 return
             }
 
-            if err := ioutil.WriteFile(htmlFileName, htmlContent.Bytes(), 0644); err != nil {
-                log.Println("Failed to write HTML report to file:", err)
+            err = ioutil.WriteFile(htmlFileName, buf.Bytes(), 0644)
+            if err != nil {
+                log.Println("Failed to save HTML report:", err)
                 return
             }
 
-            // Open the HTML report in the default web browser
-            cmd := exec.Command("xdg-open", htmlFileName)
-            if runtime.GOOS == "windows" {
-                cmd = exec.Command("cmd", "/c", "start", htmlFileName)
-            }
-            if err := cmd.Run(); err != nil {
-                log.Println("Failed to open HTML report:", err)
-            }
+            resultArea.SetText(results)
 
-            // Update the result area in the GUI
-            fyne.CurrentApp().SendNotification(&fyne.Notification{
-                Title:   "Audit Completed",
-                Content: "The audit has completed and the report is available.",
-            })
+            // Add functionality to convert HTML to PDF
+            if runtime.GOOS == "linux" {
+                err = exec.Command("wkhtmltopdf", htmlFileName, "audit_report.pdf").Run()
+                if err != nil {
+                    log.Println("Failed to convert HTML to PDF:", err)
+                }
+            } else {
+                log.Println("PDF conversion is only supported on Linux.")
+            }
         }()
     })
 
-    // Layout components
-    content := container.NewVBox(
+    // Create a button to open the file
+    openFileButton := widget.NewButton("Open Report", func() {
+        if err := exec.Command("xdg-open", "audit_report.html").Run(); err != nil {
+            log.Println("Failed to open HTML report:", err)
+        }
+    })
+
+    // Create a container for the buttons
+    buttonsContainer := container.NewHBox(startButton, openFileButton)
+
+    // Create the main layout
+    mainContent := container.NewVBox(
         logo,
         benchmarkButton,
-        startButton,
+        buttonsContainer,
         resultArea,
     )
-    myWindow.SetContent(content)
+
+    myWindow.SetContent(mainContent)
     myWindow.ShowAndRun()
 }
 
